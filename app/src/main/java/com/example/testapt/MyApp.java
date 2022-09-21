@@ -12,7 +12,7 @@ public class MyApp extends Application {
 
 
         //让每个模块的路由都注册到路由表内
-        RouterMapping.init();
+//        RouterMapping.init();
         SecondModule.init();
 
     }
