@@ -43,9 +43,9 @@ public class MyThreadLocal<T> {
         MyThreadLocalMap map = myThread.getMap();
         if (map != null) {
             MyThreadLocalMap.Entry e = map.getEntry(this);
-           return e;
+            return e;
         }
-       return null;
+        return null;
     }
 
     protected T initialValue() {

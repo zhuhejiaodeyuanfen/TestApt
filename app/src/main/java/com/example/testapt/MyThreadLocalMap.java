@@ -12,10 +12,17 @@ public class MyThreadLocalMap {
             super(k);
             value = v;
         }
+
+        @Override
+        public String toString() {
+            return "Entry{" + this.get() +
+                    "value=" + value +
+                    '}';
+        }
     }
 
 
-    private static final int INITIAL_CAPACITY = 16;
+    private static final int INITIAL_CAPACITY = 8;
 
 
     private Entry[] table;
@@ -46,11 +53,17 @@ public class MyThreadLocalMap {
 
 
     MyThreadLocalMap(MyThreadLocal firstKey, Object firstValue) {
+        System.out.println("初始化函数=====第一个keyValue======" + firstValue);
         table = new Entry[INITIAL_CAPACITY];
         int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
+        System.out.println("初始化函数=====数组下标位置" + i);
         table[i] = new Entry(firstKey, firstValue);
         size = 1;
         setThreshold(INITIAL_CAPACITY);
+
+        for (int show = 0; show < table.length; show++) {
+            System.out.println("第" + show + "个位置====" + table[show]);
+        }
     }
 
 
@@ -109,20 +122,26 @@ public class MyThreadLocalMap {
         System.out.println("查找到数组的下标为" + i);
 
         tab[i] = new Entry(key, value);
-        System.out.println("方法set==位置第" + i + "位置" + "元素===value===" + value + "======");
+        System.out.println("|=======插入Entry成功=====cleanSomeSlots方法前set==位置第" + i + "位置" + "元素===value===" + value + "======");
+
+        for (int show = 0; show < tab.length; show++) {
+            System.out.println("第" + show + "个位置====" + tab[show]);
+        }
+        System.out.println("遍历结束");
         int sz = ++size;
+        System.out.println("容量阈值===" + threshold);
         if (!cleanSomeSlots(i, sz) && sz >= threshold) {
-            System.out.println("需要rehash");
+            System.out.println("!!!!!需要rehash");
             rehash();
         } else {
             System.out.println("不需要rehash--也不需要扩容");
         }
-        System.out.println("方法set==位置第" + i + "位置" + "元素===value===" + value + "======");
+        System.out.println("cleanSomeSlots方法后set==位置第" + i + "位置" + "元素===value===" + value + "======");
     }
 
 
     public void remove(MyThreadLocal<?> key) {
-        System.out.printf("remove");
+        System.out.println("=====remove===");
         Entry[] tab = table;
         int len = tab.length;
         int i = key.threadLocalHashCode & (len - 1);
@@ -130,6 +149,7 @@ public class MyThreadLocalMap {
              e != null;
              e = tab[i = nextIndex(i, len)]) {
             if (e.get() == key) {
+                System.out.println("===查找到相同的key====");
                 e.clear();
                 expungeStaleEntry(i);
                 return;
@@ -184,7 +204,7 @@ public class MyThreadLocalMap {
 
     private int expungeStaleEntry(int staleSlot) {
 
-        System.out.println("expungeStaleEntry");
+        System.out.println("expungeStaleEntry====staleSlot==值是" + staleSlot);
         Entry[] tab = table;
         int len = tab.length;
 
@@ -197,19 +217,24 @@ public class MyThreadLocalMap {
         for (i = nextIndex(staleSlot, len);
              (e = tab[i]) != null;
              i = nextIndex(i, len)) {
+            System.out.println("进入了for循环");
             MyThreadLocal<?> k = e.get();
             if (k == null) {
                 e.value = null;
                 tab[i] = null;
                 size--;
+                System.out.println("空数据");
             } else {
                 int h = k.threadLocalHashCode & (len - 1);
+                System.out.println("计算下标");
                 if (h != i) {
+                    System.out.println("下标不一致");
                     tab[i] = null;
 
                     while (tab[h] != null)
                         h = nextIndex(h, len);
                     tab[h] = e;
+                    System.out.println("执行交换");
                 }
             }
         }
@@ -217,12 +242,14 @@ public class MyThreadLocalMap {
     }
 
     private boolean cleanSomeSlots(int i, int n) {
-        System.out.println("cleanSomeSlots=====i===="+i+"==位置下标=n=="+n+"=====");
+        System.out.println("cleanSomeSlots=====i====" + i + "==位置下标=n==length==" + n + "=====");
         boolean removed = false;
         Entry[] tab = table;
         int len = tab.length;
         do {
+            System.out.println("需要循环===查找==脏数据" + (n >>> 1) + "次");
             i = nextIndex(i, len);
+            System.out.println("查找的脏数据下标===" + i);
             Entry e = tab[i];
             if (e != null && e.get() == null) {
                 System.out.println("查找到脏数据了");
@@ -233,6 +260,7 @@ public class MyThreadLocalMap {
                 System.out.println("没有脏数据呀~");
             }
         } while ((n >>>= 1) != 0);
+        System.out.println("cleanSomeSlots结果===" + removed);
         //n >>>= 1 说明要循环log2N次。在没有发现脏Entry时，会一直往后找下个位置的entry是否是脏的，如果是的话，就会使 n = 数组的长度。然后继续循环log2新N 次。
         return removed;
     }
